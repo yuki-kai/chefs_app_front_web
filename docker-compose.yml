@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  # webのフロントエンドのコンテナ
+  frontend-web:
+    image: "node"
+    container_name: chefs-frontend-web
+    volumes:
+        - "./:/var/www/html"
+    working_dir: "/var/www/html"
+    ports:
+        - "3000:3000"
+    command: bash -c "npm ci && npm run dev"
