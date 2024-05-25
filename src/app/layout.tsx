@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
+import Header from "../components/layouts/Header";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ margin: 0 }}>
         <AppRouterCacheProvider>
+          <Header />
           {children}
         </AppRouterCacheProvider>
       </body>
