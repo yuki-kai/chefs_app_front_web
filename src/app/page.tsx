@@ -27,6 +27,7 @@ export default function Home() {
 
   return (
     <ContentWrapper>
+      <>テスト</>
       {dishes.map(dish => (
         <Box key={ dish.id } sx={{ p: 1 }}>
           <Card sx={{ display: "flex" }}>
