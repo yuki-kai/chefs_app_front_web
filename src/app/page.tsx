@@ -28,27 +28,31 @@ export default function Home() {
   return (
     <ContentWrapper>
       <>テスト</>
-      {dishes.map(dish => (
-        <Box key={ dish.id } sx={{ p: 1 }}>
-          <Card sx={{ display: "flex" }}>
-            <CardMedia
-              component="img"
-              sx={{ height: 150, width: 150,  }}
-              image="https://source.unsplash.com/random?wallpapers"
-            />
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <CardContent sx={{ flex: '1 0 auto' }}>
-                <Typography component="div" variant="h5">
-                  {dish.name}
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  {dish.description}
-                </Typography>
-              </CardContent>
-            </Box>
-          </Card>
-        </Box>
-      ))}
+      {
+        dishes.length === 0
+          ? (<div>未登録</div>)
+          : (dishes.map(dish => (
+          <Box key={ dish.id } sx={{ p: 1 }}>
+            <Card sx={{ display: "flex" }}>
+              <CardMedia
+                component="img"
+                sx={{ height: 150, width: 150,  }}
+                image="https://source.unsplash.com/random?wallpapers"
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flex: '1 0 auto' }}>
+                  <Typography component="div" variant="h5">
+                    {dish.name}
+                  </Typography>
+                  <Typography variant="subtitle1" color="text.secondary" component="div">
+                    {dish.description}
+                  </Typography>
+                </CardContent>
+              </Box>
+            </Card>
+          </Box>
+        )))
+      }
     </ContentWrapper>
   );
 }
