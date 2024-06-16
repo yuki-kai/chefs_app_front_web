@@ -9,5 +9,5 @@ services:
         - "./:/var/www/html"
     working_dir: "/var/www/html"
     ports:
-        - "3000:3000"
+        - "23000:3000"
     command: bash -c "npm ci && npm run dev"
