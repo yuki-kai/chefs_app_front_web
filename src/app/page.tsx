@@ -14,7 +14,8 @@ export default function Home() {
   const [dishes, setDishes] = useState<Dish[]>([]);
 
   const getDishes = async () => {
-    console.log("process.env.NEXT_PUBLIC_BACKEND_URL: " + process.env.NEXT_PUBLIC_BACKEND_URL)
+    console.log("NEXT_PUBLIC_ENV: " + process.env.NEXT_PUBLIC_ENV)
+    console.log("NEXT_PUBLIC_BACKEND_URL: " + process.env.NEXT_PUBLIC_BACKEND_URL)
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dishes`);
     const json = await response.json();
     setDishes(json.data);
