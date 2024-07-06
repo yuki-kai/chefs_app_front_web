@@ -14,6 +14,9 @@ export default function Home() {
   const [dishes, setDishes] = useState<Dish[]>([]);
 
   const getDishes = async () => {
+    const test = await fetch('https://chefs-app-front-development.vercel.app/api');
+    console.log("TEST: " + test.json())
+    
     console.log("NEXT_PUBLIC_VERCEL_ENV: " + process.env.NEXT_PUBLIC_VERCEL_ENV)
     console.log("NEXT_PUBLIC_BACKEND_URL: " + process.env.NEXT_PUBLIC_BACKEND_URL)
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dishes`);
@@ -29,7 +32,7 @@ export default function Home() {
 
   return (
     <ContentWrapper>
-      <>テスト</>
+      <>テストa</>
       {
         dishes.length === 0
           ? (<div>未登録</div>)
