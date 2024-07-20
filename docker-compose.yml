@@ -11,3 +11,10 @@ services:
     ports:
         - "23000:3000"
     command: bash -c "npm ci && npm run dev"
+    networks:
+        - chefs_app_backend_front
+
+networks:
+  chefs_app_backend_front:
+    external: true
+
