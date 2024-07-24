@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import axios from "axios";
 
-const GET = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dishes`);
-    return NextResponse.json(response, { status: 200 })
+export const GET = async (request: NextRequest): Promise<NextResponse> => {
+    const response = await axios.get(process.env.BACKEND_URL + "/api/dishes");
+    return NextResponse.json(response.data, { status: 200 })
 }
-
-export { GET }

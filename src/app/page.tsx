@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import ContentWrapper from '@/components/layouts/ContentWrapper';
 import { Box, Card, CardMedia, CardContent, Typography } from '@mui/material';
+import axios from "axios";
 
 interface Dish {
   id: number,
@@ -13,26 +14,18 @@ interface Dish {
 export default function Home() {
   const [dishes, setDishes] = useState<Dish[]>([]);
 
-  const getDishes = async () => {
-    const test = await fetch('https://chefs-app-front-development.vercel.app/api');
-    console.log("TEST: " + test.json())
-    
-    console.log("NEXT_PUBLIC_VERCEL_ENV: " + process.env.NEXT_PUBLIC_VERCEL_ENV)
-    console.log("NEXT_PUBLIC_BACKEND_URL: " + process.env.NEXT_PUBLIC_BACKEND_URL)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dishes`);
-    const json = await response.json();
-    setDishes(json.data);
+  const fetchDishes = async () => {
+    axios.get("/api")
+      .then(dishes => setDishes(dishes.data))
+      .catch(error => console.log(error))
   }
 
   useEffect(() => {
-    getDishes();
+    fetchDishes();
   }, []);
-
-  console.log(dishes)
 
   return (
     <ContentWrapper>
-      <>テストa</>
       {
         dishes.length === 0
           ? (<div>未登録</div>)
