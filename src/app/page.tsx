@@ -1,0 +1,57 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import ContentWrapper from '@/components/layouts/ContentWrapper';
+import { Box, Card, CardMedia, CardContent, Typography } from '@mui/material';
+import axios from "axios";
+
+interface Dish {
+  id: number,
+  name: string
+  description: string
+}
+
+export default function Home() {
+  const [dishes, setDishes] = useState<Dish[]>([]);
+
+  const fetchDishes = async () => {
+    axios.get("/api")
+      .then(dishes => setDishes(dishes.data))
+      .catch(error => console.log(error))
+  }
+
+  useEffect(() => {
+    fetchDishes();
+  }, []);
+
+  return (
+    <ContentWrapper>
+      {
+        dishes.length === 0
+          ? (<div>未登録</div>)
+          : (dishes.map(dish => (
+          <Box key={ dish.id } sx={{ p: 1 }}>
+            <Card sx={{ display: "flex" }}>
+              <CardMedia
+                component="img"
+                sx={{ height: 150, width: 150,  }}
+                image="https://source.unsplash.com/random?wallpapers"
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flex: '1 0 auto' }}>
+                  <Typography component="div" variant="h5">
+                    {dish.name}
+                  </Typography>
+                  <Typography variant="subtitle1" color="text.secondary" component="div">
+                    {dish.description}
+                  </Typography>
+                </CardContent>
+              </Box>
+            </Card>
+          </Box>
+        )))
+      }
+    </ContentWrapper>
+  );
+}
+
