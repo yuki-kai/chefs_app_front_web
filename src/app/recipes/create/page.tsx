@@ -1,11 +1,16 @@
 "use client";
 
-import { Box, Button, Container, FormControl, FormLabel, IconButton, Stack, TextField } from "@mui/material";
+import { Box, Button, Container, FormControl, FormLabel, IconButton, Modal, Stack, TextField } from "@mui/material";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import { useRef, useState } from "react";
+import style from "./page.module.css";
+import Image from 'next/image';
+import { CropperDialog } from "@/components/commons/CropperDialog";
 
 function Create() {
   const [dishImage, setDishImage] = useState("");
+  const [cropedImage, setCropedImage] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [ingredients, setIngredients] = useState<{ name: string, amount: string }[]>([]);
   const [recipes, setRecipes] = useState<{ instruction: string }[]>([]);
 
@@ -56,10 +61,24 @@ function Create() {
       throw new Error("Event.target.files is null");
     };
     setDishImage(URL.createObjectURL(files[0]));
+    setIsOpen(true);
   };
+
+  const onCropComplete = (url :string) => {
+    setCropedImage(url)
+  }
 
   return (
     <Container maxWidth="sm" sx={{ p: 5 }}>
+
+      {/* 切り抜きモーダル */}
+      <CropperDialog
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        src={dishImage}
+        onCropComplete={onCropComplete}
+      />
+
       <Stack spacing={3}>
         <FormControl>
           <input
@@ -70,14 +89,19 @@ function Create() {
             ref={input}
           />
           <Box textAlign='center'>
-            <Button
-              onClick={openSelectFileModal}
-              variant="outlined"
-              sx={{ height: "300px",  width: "300px" }}
-            >
-              料理写真
-            </Button>
-            
+            {cropedImage
+              ? <Image
+                  onClick={openSelectFileModal}
+                  src={cropedImage} className={style.img} width={300} height={300} alt=""
+                />
+              : <Button
+                  onClick={openSelectFileModal}
+                  variant="outlined"
+                  sx={{ height: "300px",  width: "300px" }}
+                >
+                  料理写真
+                </Button>
+            }
           </Box>
         </FormControl>
 
@@ -123,9 +147,9 @@ function Create() {
                   onChange={(event) => updateIngredient("amount", index, event.target.value)}
                 />
                 <IconButton
+                  onClick={() => deleteIngredientForm(index)}
                   sx={{ width: "5%" }}
                   size="small"
-                  onClick={() => deleteIngredientForm(index)}
                 >
                   <HighlightOffIcon fontSize="medium"/>
                 </IconButton>
@@ -133,11 +157,11 @@ function Create() {
             ))
           }
           <Button
+            onClick={addIngredientForm}
             sx={{ mt: 1 }}
             color="primary"
             variant="outlined"
             size="small"
-            onClick={addIngredientForm}
           >
             材料を追加
           </Button>
@@ -163,9 +187,9 @@ function Create() {
                   onChange={(event) => updateRecipe(index, event.target.value)}
                 />
                 <IconButton
+                  onClick={() => deleteRecipeForm(index)}
                   sx={{ width: "5%" }}
                   size="small"
-                  onClick={() => deleteRecipeForm(index)}
                 >
                   <HighlightOffIcon fontSize="medium"/>
                 </IconButton>
@@ -173,11 +197,11 @@ function Create() {
             ))
           }
           <Button
+            onClick={addRecipeForm}
             sx={{ mt: 1 }}
             color="primary"
             variant="outlined"
             size="small"
-            onClick={addRecipeForm}
           >
             作り方を追加
           </Button>
