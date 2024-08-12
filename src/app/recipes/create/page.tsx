@@ -6,13 +6,17 @@ import { useRef, useState } from "react";
 import style from "./page.module.css";
 import Image from 'next/image';
 import { CropperDialog } from "@/components/commons/CropperDialog";
+import axios from "axios";
+import { redirect } from 'next/navigation'
 
 function Create() {
   const [dishImage, setDishImage] = useState("");
   const [cropedImage, setCropedImage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [ingredients, setIngredients] = useState<{ name: string, amount: string }[]>([]);
-  const [recipes, setRecipes] = useState<{ instruction: string }[]>([]);
+  const [name, setName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [ingredients, setIngredients] = useState<{ name: string, amount: string }[]>([{ name: "", amount: "" }]);
+  const [recipes, setRecipes] = useState<{ instruction: string }[]>([{ instruction: "" }]);
 
   const addIngredientForm = () => {
     setIngredients([...ingredients, { name: "", amount: "" }]);
@@ -47,7 +51,6 @@ function Create() {
   };
 
   const input = useRef<HTMLInputElement>(null);
-
   const openSelectFileModal = () => {
     input!.current!.click();
   };
@@ -66,6 +69,24 @@ function Create() {
 
   const onCropComplete = (url :string) => {
     setCropedImage(url)
+  }
+
+  const postDish = async () => {
+    const data = {
+      imagePath: cropedImage,
+      name: name,
+      description: description,
+      ingredients: ingredients,
+      recipes: recipes,
+    };
+    console.log("=== post ===")
+    console.log(data)
+    axios.post("/api/create", data)
+      .then(() => {
+        console.log("成功")
+        redirect("/")
+      })
+      .catch(error => console.log(error))
   }
 
   return (
@@ -107,28 +128,21 @@ function Create() {
 
         <FormControl>
           <FormLabel component="legend">料理名</FormLabel>
-          <TextField required />
+          <TextField onChange={(event) => setName(event.target.value)} value={name} />
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">概要</FormLabel>
-          <TextField required multiline rows={4} />
+          <TextField
+            onChange={(event) => setDescription(event.target.value)}
+            value={description}
+            multiline
+            rows={4}
+          />
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">材料</FormLabel>
-          <Stack direction="row">
-            <TextField
-              placeholder="例: 醤油"
-              sx={{ width: "65%" }}
-              size="small"
-              />
-            <TextField
-              placeholder="例: 大さじ1"
-              sx={{ width: "30%" }}
-              size="small"
-            />
-          </Stack>
           { ingredients.map(
             (ingredient, index) => (
               <Stack key={index} direction="row" sx={{ pt: 1 }}>
@@ -156,26 +170,13 @@ function Create() {
               </Stack>
             ))
           }
-          <Button
-            onClick={addIngredientForm}
-            sx={{ mt: 1 }}
-            color="primary"
-            variant="outlined"
-            size="small"
-          >
+          <Button onClick={addIngredientForm} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
             材料を追加
           </Button>
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">作り方</FormLabel>
-          <Stack direction="row">
-            <TextField
-              placeholder="例: 玉ねぎを5ミリ幅に切る"
-              sx={{ width: "95%" }}
-              size="small"
-              />
-          </Stack>
           { recipes.map(
             (recipe, index) => (
               <Stack key={index} direction="row" sx={{ pt: 1 }}>
@@ -196,19 +197,13 @@ function Create() {
               </Stack>
             ))
           }
-          <Button
-            onClick={addRecipeForm}
-            sx={{ mt: 1 }}
-            color="primary"
-            variant="outlined"
-            size="small"
-          >
+          <Button onClick={addRecipeForm} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
             作り方を追加
           </Button>
         </FormControl>
 
         <Stack sx={{ pt: 5 }}>
-          <Button color="primary" variant="contained" size="large">
+          <Button onClick={postDish} color="primary" variant="contained" size="large">
             作成
           </Button>
         </Stack>
