@@ -7,6 +7,7 @@ import axios from "axios";
 
 interface Dish {
   id: number,
+  image_path: string
   name: string
   description: string
 }
@@ -35,7 +36,7 @@ export default function Home() {
               <CardMedia
                 component="img"
                 sx={{ height: 150, width: 150,  }}
-                image="https://source.unsplash.com/random?wallpapers"
+                image={dish.image_path}
               />
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flex: '1 0 auto' }}>

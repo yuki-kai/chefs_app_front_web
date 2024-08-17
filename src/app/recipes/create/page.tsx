@@ -1,58 +1,57 @@
 "use client";
 
-import { Box, Button, Container, FormControl, FormLabel, IconButton, Modal, Stack, TextField } from "@mui/material";
+import { Box, Button, Container, FormControl, FormHelperText, FormLabel, IconButton, Stack, TextField } from "@mui/material";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import style from "./page.module.css";
 import Image from 'next/image';
 import { CropperDialog } from "@/components/commons/CropperDialog";
 import axios from "axios";
 import { redirect } from 'next/navigation'
+import { useForm, useFieldArray } from "react-hook-form";
 
 function Create() {
-  const [dishImage, setDishImage] = useState("");
+  const [originalImage, setOriginalImage] = useState("");
   const [cropedImage, setCropedImage] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [ingredients, setIngredients] = useState<{ name: string, amount: string }[]>([{ name: "", amount: "" }]);
-  const [recipes, setRecipes] = useState<{ instruction: string }[]>([{ instruction: "" }]);
+  const [uploadImage, setUploadImage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const addIngredientForm = () => {
-    setIngredients([...ingredients, { name: "", amount: "" }]);
-  };
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    register,
+  } = useForm<{
+    cropedImage: string,
+    name: string,
+    description: string,
+    ingredients: {
+      name: string,
+      amount: string,
+    }[],
+    recipes: {
+      instruction: string;
+    }[]
+  }>({
+    defaultValues: {
+      ingredients: [{ name: "", amount: "" }],
+      recipes: [{ instruction: "" }],
+    },
+  });
 
-  const updateIngredient = (key: string, index: number, value: string) => {
-    setIngredients(ingredients.map((ingredient, ingredientIndex) => 
-      ingredientIndex === index ? { ...ingredient, [key]: value } : ingredient
-    ));
-  };
+  const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
+    name: "ingredients",
+    control: control,
+  });
 
-  const deleteIngredientForm = (index: number) => {
-    setIngredients(ingredients.filter(
-      (_, ingredientIndex) => ingredientIndex !== index)
-    );
-  };
+  const { fields: recipeFields, append: appendInstruction, remove: removeInstruction } = useFieldArray({
+    name: "recipes",
+    control: control,
+  });
 
-  const addRecipeForm = () => {
-    setRecipes([...recipes, { instruction: "" }]);
-  };
-
-  const updateRecipe = (index: number, value: string) => {
-    setRecipes(recipes.map((recipe, recipeIndex) => 
-      recipeIndex === index ? { ...recipe, "instruction": value } : recipe
-    ));
-  };
-
-  const deleteRecipeForm = (index: number) => {
-    setRecipes(recipes.filter(
-      (_, recipeIndex) => recipeIndex !== index)
-    );
-  };
-
-  const input = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const openSelectFileModal = () => {
-    input!.current!.click();
+    inputRef!.current!.click();
   };
 
   const handleFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,28 +62,28 @@ function Create() {
     if (files == null || files?.length === 0) {
       throw new Error("Event.target.files is null");
     };
-    setDishImage(URL.createObjectURL(files[0]));
-    setIsOpen(true);
+    setOriginalImage(URL.createObjectURL(files[0]));
+    setIsModalOpen(true);
   };
 
-  const onCropComplete = (url :string) => {
+  const { ref, ...rest } = register('cropedImage', { onChange: handleFiles });
+
+  const onCropComplete = (url :string, base64 :string) => {
     setCropedImage(url)
+    setUploadImage(base64)
   }
 
-  const postDish = async () => {
+  const onSubmit = async (values: any) => {
     const data = {
-      imagePath: cropedImage,
-      name: name,
-      description: description,
-      ingredients: ingredients,
-      recipes: recipes,
+      base64: uploadImage,
+      name: values.name,
+      description: values.description,
+      ingredients: values.ingredients,
+      recipes: values.recipes,
     };
-    console.log("=== post ===")
-    console.log(data)
     axios.post("/api/create", data)
       .then(() => {
         console.log("成功")
-        redirect("/")
       })
       .catch(error => console.log(error))
   }
@@ -94,20 +93,23 @@ function Create() {
 
       {/* 切り抜きモーダル */}
       <CropperDialog
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        src={dishImage}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        targetImage={originalImage}
         onCropComplete={onCropComplete}
       />
 
       <Stack spacing={3}>
         <FormControl>
           <input
-            onChange={handleFiles}
             type="file"
             accept=".png,.jpeg,.jpg"
             hidden
-            ref={input}
+            ref={(element) => {
+              ref(element)
+              inputRef.current = element
+            }}
+            {...rest}
           />
           <Box textAlign='center'>
             {cropedImage
@@ -123,87 +125,139 @@ function Create() {
                   料理写真
                 </Button>
             }
+            <FormHelperText error={errors.cropedImage ? true : false}>
+              { errors.cropedImage?.message ?? "" }
+            </FormHelperText>
           </Box>
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">料理名</FormLabel>
-          <TextField onChange={(event) => setName(event.target.value)} value={name} />
+          <TextField
+            error={errors.name ? true : false}
+            { ...register("name", {
+                required: "入力してください",
+                maxLength: { value: 20, message: "20文字以内で入力してください" }
+              }
+            )}
+          />
+          <FormHelperText error={errors.name ? true : false} sx={{ m: 0 }}>
+            { errors.name?.message ?? "" }
+          </FormHelperText>
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">概要</FormLabel>
           <TextField
-            onChange={(event) => setDescription(event.target.value)}
-            value={description}
             multiline
             rows={4}
+            error={errors.description ? true : false}
+            // helperText={errors.description?.message ?? ""}
+            { ...register("description", {
+                required: "入力してください",
+                maxLength: { value: 100, message: "100文字以内で入力してください" }
+              }
+            )}
           />
+          <FormHelperText error={errors.description ? true : false} sx={{ m: 0 }}>
+            { errors.description?.message ?? "" }
+          </FormHelperText>
         </FormControl>
 
         <FormControl>
-          <FormLabel component="legend">材料</FormLabel>
-          { ingredients.map(
+          <Stack direction="row">
+            <FormLabel component="legend" sx={{ width: "65%" }}>材料</FormLabel>
+            <FormLabel component="legend">分量</FormLabel>
+          </Stack>
+          { ingredientFields.map(
             (ingredient, index) => (
-              <Stack key={index} direction="row" sx={{ pt: 1 }}>
-                <TextField
-                  placeholder="材料"
-                  sx={{ width: "65%" }}
-                  size="small"
-                  value={ingredient.name}
-                  onChange={(event) => updateIngredient("name", index, event.target.value)}
-                />
-                <TextField
-                  placeholder="分量"
-                  sx={{ width: "30%" }}
-                  size="small"
-                  value={ingredient.amount}
-                  onChange={(event) => updateIngredient("amount", index, event.target.value)}
-                />
-                <IconButton
-                  onClick={() => deleteIngredientForm(index)}
-                  sx={{ width: "5%" }}
-                  size="small"
-                >
-                  <HighlightOffIcon fontSize="medium"/>
-                </IconButton>
-              </Stack>
+              <React.Fragment key={index}>
+                <Stack direction="row">
+                  <TextField
+                    placeholder="しょうゆ"
+                    sx={{ width: "64%", mr: "1%" }}
+                    size="small"
+                    error={errors.ingredients?.[index] ? true : false}
+                    {...register(`ingredients.${index}.name`, {
+                      required: "入力してください",
+                      maxLength: { value: 100, message: "100文字以内で入力してください" }
+                    })}
+                  />
+                  <TextField
+                    placeholder="大さじ1杯"
+                    sx={{ width: "30%" }}
+                    size="small"
+                    error={errors.ingredients?.[index] ? true : false}
+                    {...register(`ingredients.${index}.amount`, {
+                      required: "入力してください",
+                      maxLength: { value: 10, message: "10文字以内で入力してください" }
+                    })}
+                  />
+                  <IconButton
+                    onClick={() => removeIngredient(index)}
+                    disabled={ingredientFields.length <= 1}
+                    sx={{ width: "5%" }}
+                    size="small"
+                  >
+                    <HighlightOffIcon fontSize="medium"/>
+                  </IconButton>
+                </Stack>
+                <Stack direction="row" sx={{ pb: 1 }}>
+                  <FormHelperText error={errors.ingredients?.[index] ? true : false} sx={{ width: "65%", m: 0 }}>
+                    { errors.ingredients?.[index]?.name?.message ?? "" }
+                  </FormHelperText>
+                  <FormHelperText error={errors.ingredients?.[index] ? true : false} sx={{ width: "30%", m: 0 }}>
+                    { errors.ingredients?.[index]?.amount?.message ?? "" }
+                  </FormHelperText>
+                </Stack>
+              </React.Fragment>
             ))
           }
-          <Button onClick={addIngredientForm} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
+          <Button onClick={() => appendIngredient({ name: "", amount: "" })} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
             材料を追加
           </Button>
         </FormControl>
 
         <FormControl>
           <FormLabel component="legend">作り方</FormLabel>
-          { recipes.map(
-            (recipe, index) => (
-              <Stack key={index} direction="row" sx={{ pt: 1 }}>
+          { recipeFields.map((field, index) => (
+            <React.Fragment key={index}>
+              <Stack direction="row">
                 <TextField
                   placeholder="作り方"
                   sx={{ width: "95%" }}
                   size="small"
-                  value={recipe.instruction}
-                  onChange={(event) => updateRecipe(index, event.target.value)}
+                  multiline
+                  rows={2}
+                  error={errors.recipes?.[index] ? true : false}
+                  {...register(`recipes.${index}.instruction`, {
+                    required: "入力してください",
+                    maxLength: { value: 100, message: "100文字以内で入力してください" }
+                  })}
                 />
                 <IconButton
-                  onClick={() => deleteRecipeForm(index)}
+                  onClick={() => removeInstruction(index)}
+                  disabled={recipeFields.length <= 1}
                   sx={{ width: "5%" }}
                   size="small"
                 >
                   <HighlightOffIcon fontSize="medium"/>
                 </IconButton>
               </Stack>
-            ))
-          }
-          <Button onClick={addRecipeForm} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
+              <Stack direction="row" sx={{ pb: 1 }}>
+                <FormHelperText error={errors.recipes?.[index] ? true : false} sx={{ m: 0 }}>
+                  { errors.recipes?.[index]?.instruction?.message ?? "" }
+                </FormHelperText>
+              </Stack>
+            </React.Fragment>
+          ))}
+          <Button onClick={() => appendInstruction({ instruction: "" })} sx={{ mt: 1 }} color="primary" variant="outlined" size="small">
             作り方を追加
           </Button>
         </FormControl>
 
         <Stack sx={{ pt: 5 }}>
-          <Button onClick={postDish} color="primary" variant="contained" size="large">
+          <Button onClick={handleSubmit(onSubmit)} color="primary" variant="contained" size="large">
             作成
           </Button>
         </Stack>

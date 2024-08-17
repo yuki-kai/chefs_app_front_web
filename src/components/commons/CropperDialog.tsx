@@ -1,16 +1,16 @@
 import { Box, Button, Modal } from "@mui/material";
-import React, { createRef, Dispatch, SetStateAction, useRef, useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import ReactCrop, { type Crop } from "react-image-crop"
 import "react-image-crop/dist/ReactCrop.css";
 
 type Props = {
-  isOpen: boolean,
-  src: string,
-  setIsOpen: Dispatch<SetStateAction<boolean>>,
-  onCropComplete: (croppedImageUrl: string) => void
+  isModalOpen: boolean,
+  targetImage: string,
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>,
+  onCropComplete: (croppedImageUrl: string, data: string) => void
 };
 
-export const CropperDialog = ({ isOpen, src, setIsOpen, onCropComplete }: Props) => {
+export const CropperDialog = ({ isModalOpen, targetImage, setIsModalOpen, onCropComplete }: Props) => {
   const [crop, setCrop] = useState<Crop>({
     unit: "px",
     x: 0,
@@ -20,8 +20,8 @@ export const CropperDialog = ({ isOpen, src, setIsOpen, onCropComplete }: Props)
 })
 const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
 
-  const handleClose = (setIsOpen: React.Dispatch<React.SetStateAction<boolean>>) => {
-    setIsOpen(false);
+  const handleClose = (setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setIsModalOpen(false);
   }
 
   const cropImage = async () => {
@@ -52,11 +52,11 @@ const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
         return;
       }
       const croppedImageUrl = URL.createObjectURL(blob);
-      onCropComplete(croppedImageUrl);
-      setIsOpen(false);
-    }, "image/jpeg");
+      const base64Image = canvas.toDataURL("image/png");
 
-    setIsOpen(false);
+      onCropComplete(croppedImageUrl, base64Image);
+      setIsModalOpen(false);
+    }, "image/png");
   }
 
   const style = {
@@ -73,8 +73,8 @@ const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   
   return (
     <Modal
-      open={isOpen}
-      onClose={() => handleClose(setIsOpen)}
+      open={isModalOpen}
+      onClose={() => handleClose(setIsModalOpen)}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
@@ -84,7 +84,7 @@ const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
           aspect={1}
           onChange={c => setCrop(c)}
         >
-          <img src={src} onLoad={(e) => setImageRef(e.currentTarget)}/>
+          <img src={targetImage} onLoad={(e) => setImageRef(e.currentTarget)} />
         </ReactCrop>
         <Button color="primary" variant="contained" size="medium" onClick={cropImage}>切り取る</Button>
       </Box>
