@@ -9,6 +9,7 @@ import { CropperDialog } from "@/components/commons/CropperDialog";
 import axios from "axios";
 import { redirect } from 'next/navigation'
 import { useForm, useFieldArray } from "react-hook-form";
+import { CreateDishRequest, Ingredient, Recipe } from "@/types/dish.type";
 
 function Create() {
   const [originalImage, setOriginalImage] = useState("");
@@ -21,21 +22,10 @@ function Create() {
     handleSubmit,
     formState: { errors },
     register,
-  } = useForm<{
-    cropedImage: string,
-    name: string,
-    description: string,
-    ingredients: {
-      name: string,
-      amount: string,
-    }[],
-    recipes: {
-      instruction: string;
-    }[]
-  }>({
+  } = useForm<CreateDishRequest>({
     defaultValues: {
-      ingredients: [{ name: "", amount: "" }],
-      recipes: [{ instruction: "" }],
+      ingredients: [{ name: "", amount: "" } as Ingredient],
+      recipes: [{ instruction: "" } as Recipe],
     },
   });
 
@@ -73,7 +63,7 @@ function Create() {
     setUploadImage(base64)
   }
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: CreateDishRequest) => {
     const data = {
       base64: uploadImage,
       name: values.name,
@@ -152,7 +142,6 @@ function Create() {
             multiline
             rows={4}
             error={errors.description ? true : false}
-            // helperText={errors.description?.message ?? ""}
             { ...register("description", {
                 required: "入力してください",
                 maxLength: { value: 100, message: "100文字以内で入力してください" }
@@ -180,7 +169,7 @@ function Create() {
                     error={errors.ingredients?.[index] ? true : false}
                     {...register(`ingredients.${index}.name`, {
                       required: "入力してください",
-                      maxLength: { value: 100, message: "100文字以内で入力してください" }
+                      maxLength: { value: 20, message: "20文字以内で入力してください" }
                     })}
                   />
                   <TextField

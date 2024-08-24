@@ -4,16 +4,10 @@ import React, { useEffect, useState } from 'react';
 import ContentWrapper from '@/components/layouts/ContentWrapper';
 import { Box, Card, CardMedia, CardContent, Typography } from '@mui/material';
 import axios from "axios";
-
-interface Dish {
-  id: number,
-  image_path: string
-  name: string
-  description: string
-}
+import { DishCard } from '@/types/dish.type';
 
 export default function Home() {
-  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [dishes, setDishes] = useState<DishCard[]>([]);
 
   const fetchDishes = async () => {
     axios.get("/api")
