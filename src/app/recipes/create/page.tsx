@@ -7,21 +7,24 @@ import style from "./page.module.css";
 import Image from 'next/image';
 import { CropperDialog } from "@/components/commons/CropperDialog";
 import axios from "axios";
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useForm, useFieldArray } from "react-hook-form";
 import { CreateDishRequest, Ingredient, Recipe } from "@/types/dish.type";
+import { setValidationError } from "@/utils/setValidationError";
 
 function Create() {
   const [originalImage, setOriginalImage] = useState("");
   const [cropedImage, setCropedImage] = useState("");
   const [uploadImage, setUploadImage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter()
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     register,
+    setError,
   } = useForm<CreateDishRequest>({
     defaultValues: {
       ingredients: [{ name: "", amount: "" } as Ingredient],
@@ -56,7 +59,10 @@ function Create() {
     setIsModalOpen(true);
   };
 
-  const { ref, ...rest } = register('cropedImage', { onChange: handleFiles });
+  const { ref, ...rest } = register('cropedImage', { 
+    required: "料理写真を選択してください",
+    onChange: handleFiles
+  });
 
   const onCropComplete = (url :string, base64 :string) => {
     setCropedImage(url)
@@ -65,7 +71,7 @@ function Create() {
 
   const onSubmit = async (values: CreateDishRequest) => {
     const data = {
-      base64: uploadImage,
+      cropedImage: uploadImage,
       name: values.name,
       description: values.description,
       ingredients: values.ingredients,
@@ -74,8 +80,9 @@ function Create() {
     axios.post("/api/create", data)
       .then(() => {
         console.log("成功")
+        router.replace('/')
       })
-      .catch(error => console.log(error))
+      .catch(error => setValidationError(error.response.data.errors, setError))
   }
 
   return (
