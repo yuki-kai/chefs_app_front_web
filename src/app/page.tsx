@@ -5,8 +5,12 @@ import ContentWrapper from '@/components/layouts/ContentWrapper';
 import { Box, Card, CardMedia, CardContent, Typography } from '@mui/material';
 import axios from "axios";
 import { DishCard } from '@/types/dish.type';
+import { useCookies } from 'next-client-cookies';
+import { FlashMessage } from '@/components/commons/FlashMessage';
+import { Severity } from '@/types/severity.type';
 
 export default function Home() {
+  const cookies = useCookies();
   const [dishes, setDishes] = useState<DishCard[]>([]);
 
   const fetchDishes = async () => {
@@ -21,6 +25,11 @@ export default function Home() {
 
   return (
     <ContentWrapper>
+      {
+        cookies.get(Severity.Success)
+          ? <FlashMessage messageSeverity={ Severity.Success } message="レシピを追加しました。" />
+          : null
+      }
       {
         dishes.length === 0
           ? (<div>未登録</div>)
